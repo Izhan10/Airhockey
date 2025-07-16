@@ -2,18 +2,40 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Air Hockey Game</title>
 <style>
-  body { background: #111; margin: 0; display: flex; flex-direction: column; align-items: center; }
-  #gameCanvas { background: black; display: block; margin: 20px auto; }
-  #menu, #gameOver, #roundOver, #roundSelection { display: none; flex-direction: column; align-items: center; }
-  button { font-size: 1.2em; margin: 10px; padding: 10px 30px; }
+  body { 
+    background: #111; 
+    margin: 0; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    height: 100vh; 
+  }
+  #gameCanvas { 
+    background: black; 
+    display: block; 
+    margin: 10px auto; 
+    touch-action: none; /* Prevent default touch behavior */
+  }
+  #menu, #gameOver, #roundOver, #roundSelection { 
+    display: none; 
+    flex-direction: column; 
+    align-items: center; 
+  }
+  button { 
+    font-size: 1.5em; 
+    margin: 10px; 
+    padding: 15px 30px; 
+    touch-action: manipulation; /* Enable touch interaction */
+  }
   #pinPopup, #roundPopup {
     position: absolute; 
     left: 50%; 
     top: 50%; 
-    transform: translate(-50%, -50%); /* Center the popup */
-    font-size: 2.2em; 
+    transform: translate(-50%, -50%);
+    font-size: 2em; 
     color: lime; 
     background: rgba(0,0,0,0.75); 
     padding: 16px 45px;
@@ -35,7 +57,7 @@
     <button id="round5Btn">Play 5 Rounds</button>
     <button id="round10Btn">Play 10 Rounds</button>
   </div>
-  <canvas id="gameCanvas" width="400" height="800"></canvas>
+  <canvas id="gameCanvas"></canvas>
   <div id="gameOver">
     <h2 id="winnerText"></h2>
     <button id="restartBtn">New Game</button>
@@ -43,21 +65,26 @@
   <div id="roundPopup"></div>
   <div id="pinPopup">Pin Point</div>
 <script>
+  // Set canvas size based on viewport
+  const canvas = document.getElementById("gameCanvas");
+  const width = Math.min(window.innerWidth * 0.9, 400); // 90% of screen width or 400px
+  const height = Math.min(window.innerHeight * 0.8, 800); // 80% of screen height or 800px
+  canvas.width = width;
+  canvas.height = height;
+
   // Game constants
-  const width = 400, height = 800;
   const malletRadius = 38, puckRadius = 18;
   const puckSpeed = 6, aiSpeed = 5;
   let selectedRounds = 2;
 
   // DOM Elements
-  const menuDiv = document.getElementById("menu");
-  const roundSelectionDiv = document.getElementById("roundSelection");
-  const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
   const pinPopup = document.getElementById("pinPopup");
   const gameOverDiv = document.getElementById("gameOver");
   const winnerText = document.getElementById("winnerText");
   const roundPopup = document.getElementById("roundPopup");
+  const menuDiv = document.getElementById("menu");
+  const roundSelectionDiv = document.getElementById("roundSelection");
 
   let animationId;
   let gameState = "menu"; // menu, playing, roundover, gameover
@@ -69,7 +96,6 @@
   let aiMallet = { x: width/2, y: 120 };
   let puck = {};
   let isDragging = false;
-  let canvasOffset;
 
   function resetPuck() {
     puck = {
@@ -141,11 +167,11 @@
   }
 
   function drawScore() {
-    ctx.font = '32px sans-serif';
+    ctx.font = `${Math.min(32, width/10)}px sans-serif`;
     ctx.fillStyle = '#fff';
     ctx.fillText(playerScore, width-64, height-28);
     ctx.fillText(aiScore, width-64, 48);
-    ctx.font = '21px sans-serif';
+    ctx.font = `${Math.min(21, width/20)}px sans-serif`;
     ctx.fillText(`Round: ${round} / ${selectedRounds}`, 22, 44);
     ctx.fillText(`Match: ${roundsWon.player}-${roundsWon.ai}`, 22, height-32);
   }
@@ -208,13 +234,13 @@
     if (puck.y <= puckRadius) { // Player scores
       playerScore++;
       showPopup("Pin Point");
-      checkRoundScore(); // This will handle the scoring and round progression
+      checkRoundScore();
       return; // Stop processing this frame, puck will be reset
     }
     if (puck.y >= height - puckRadius) { // AI scores
       aiScore++;
       showPopup("Pin Point");
-      checkRoundScore(); // This will handle the scoring and round progression
+      checkRoundScore();
       return; // Stop processing this frame, puck will be reset
     }
 
