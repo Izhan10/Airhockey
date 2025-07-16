@@ -13,10 +13,10 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    font-size: 3em;
+    font-size: 2em; /* Reduced font size */
     color: lime;
     background: rgba(0,0,0,0.75);
-    padding: 16px 45px;
+    padding: 10px 20px; /* Reduced padding */
     border-radius: 15px;
     display: none;
     font-family: sans-serif;
@@ -140,11 +140,11 @@
   }
 
   function drawScore() {
-    ctx.font = '32px sans-serif';
+    ctx.font = '24px sans-serif'; /* Reduced font size */
     ctx.fillStyle = '#fff';
     ctx.fillText(playerScore, canvas.width - 64, canvas.height - 28);
     ctx.fillText(aiScore, canvas.width - 64, 48);
-    ctx.font = '21px sans-serif';
+    ctx.font = '18px sans-serif'; /* Reduced font size */
     ctx.fillText(`Round: ${round} / ${selectedRounds}`, 22, 44);
     ctx.fillText(`Match: ${roundsWon.player}-${roundsWon.ai}`, 22, canvas.height - 32);
   }
