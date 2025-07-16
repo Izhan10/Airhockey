@@ -2,46 +2,24 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Air Hockey Game</title>
 <style>
-  body { 
-    background: #111; 
-    margin: 0; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    height: 100vh; 
-  }
-  #gameCanvas { 
-    background: black; 
-    display: block; 
-    margin: 10px auto; 
-    touch-action: none; /* Prevent default touch behavior */
-  }
-  #menu, #gameOver, #roundOver, #roundSelection { 
-    display: none; 
-    flex-direction: column; 
-    align-items: center; 
-  }
-  button { 
-    font-size: 1.5em; 
-    margin: 10px; 
-    padding: 15px 30px; 
-    touch-action: manipulation; /* Enable touch interaction */
-  }
+  body { background: #111; margin: 0; display: flex; flex-direction: column; align-items: center; width: 100vw; height: 100vh; }
+  #gameCanvas { background: black; display: block; width: 100%; height: 100%; }
+  #menu, #gameOver, #roundOver, #roundSelection { display: none; flex-direction: column; align-items: center; width: 100%; }
+  button { font-size: 2em; margin: 10px; padding: 10px 30px; width: 80%; max-width: 200px; }
   #pinPopup, #roundPopup {
-    position: absolute; 
-    left: 50%; 
-    top: 50%; 
+    position: absolute;
+    left: 50%;
+    top: 50%;
     transform: translate(-50%, -50%);
-    font-size: 2em; 
-    color: lime; 
-    background: rgba(0,0,0,0.75); 
+    font-size: 3em;
+    color: lime;
+    background: rgba(0,0,0,0.75);
     padding: 16px 45px;
-    border-radius: 15px; 
-    display: none; 
-    font-family: sans-serif; 
+    border-radius: 15px;
+    display: none;
+    font-family: sans-serif;
     z-index: 10;
   }
   #roundPopup { color: #fff; background: #1b1b1b }
@@ -65,26 +43,21 @@
   <div id="roundPopup"></div>
   <div id="pinPopup">Pin Point</div>
 <script>
-  // Set canvas size based on viewport
-  const canvas = document.getElementById("gameCanvas");
-  const width = Math.min(window.innerWidth * 0.9, 400); // 90% of screen width or 400px
-  const height = Math.min(window.innerHeight * 0.8, 800); // 80% of screen height or 800px
-  canvas.width = width;
-  canvas.height = height;
-
   // Game constants
+  const aspectRatio = 9 / 16;
   const malletRadius = 38, puckRadius = 18;
   const puckSpeed = 6, aiSpeed = 5;
   let selectedRounds = 2;
 
   // DOM Elements
+  const menuDiv = document.getElementById("menu");
+  const roundSelectionDiv = document.getElementById("roundSelection");
+  const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
   const pinPopup = document.getElementById("pinPopup");
   const gameOverDiv = document.getElementById("gameOver");
   const winnerText = document.getElementById("winnerText");
   const roundPopup = document.getElementById("roundPopup");
-  const menuDiv = document.getElementById("menu");
-  const roundSelectionDiv = document.getElementById("roundSelection");
 
   let animationId;
   let gameState = "menu"; // menu, playing, roundover, gameover
@@ -92,29 +65,29 @@
   let playerScore = 0, aiScore = 0;
   let roundsWon = {player: 0, ai: 0};
   let popupTimeout = null;
-  let playerMallet = { x: width/2, y: height-120 };
-  let aiMallet = { x: width/2, y: 120 };
+  let playerMallet = { x: canvas.width / 2, y: canvas.height - 120 };
+  let aiMallet = { x: canvas.width / 2, y: 120 };
   let puck = {};
   let isDragging = false;
 
   function resetPuck() {
     puck = {
-      x: width/2, y: height/2,
-      vx: (Math.random() > 0.5 ? 1 : -1) * (puckSpeed+Math.random()*2),
-      vy: (Math.random() > 0.5 ? 1 : -1) * (puckSpeed+Math.random()*2)
+      x: canvas.width / 2, y: canvas.height / 2,
+      vx: (Math.random() > 0.5 ? 1 : -1) * (puckSpeed + Math.random() * 2),
+      vy: (Math.random() > 0.5 ? 1 : -1) * (puckSpeed + Math.random() * 2)
     };
   }
 
   function resetRoundState() {
     playerScore = 0; aiScore = 0;
-    playerMallet.x = width/2; playerMallet.y = height-120;
-    aiMallet.x = width/2; aiMallet.y = 120;
+    playerMallet.x = canvas.width / 2; playerMallet.y = canvas.height - 120;
+    aiMallet.x = canvas.width / 2; aiMallet.y = 120;
     resetPuck();
   }
 
   function newGame() {
     round = 1;
-    roundsWon = {player: 0, ai: 0};
+    roundsWon = { player: 0, ai: 0 };
     resetRoundState();
     gameOverDiv.style.display = "none";
     menuDiv.style.display = "none";
@@ -137,48 +110,48 @@
   // ----------------- Drawing -----------------
   function drawBackground() {
     ctx.fillStyle = "#f00";
-    ctx.fillRect(0, 0, width, height/2);
+    ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
     ctx.fillStyle = "#07f";
-    ctx.fillRect(0, height/2, width, height/2);
-    for (let x=24; x<width; x+=48) {
-      for (let y=24; y<height; y+=48) {
+    ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
+    for (let x = 24; x < canvas.width; x += 48) {
+      for (let y = 24; y < canvas.height; y += 48) {
         ctx.fillStyle = "#fff",
-        ctx.beginPath(),
-        ctx.arc(x, y, 2, 0, 2*Math.PI), ctx.fill();
+          ctx.beginPath(),
+          ctx.arc(x, y, 2, 0, 2 * Math.PI), ctx.fill();
       }
     }
     ctx.strokeStyle = "#fff";
     ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.moveTo(0, height/2); ctx.lineTo(width, height/2); ctx.stroke();
+    ctx.moveTo(0, canvas.height / 2); ctx.lineTo(canvas.width, canvas.height / 2); ctx.stroke();
     ctx.beginPath();
-    ctx.arc(width/2, height/2, 40, 0, 2*Math.PI); ctx.stroke();
+    ctx.arc(canvas.width / 2, canvas.height / 2, 40, 0, 2 * Math.PI); ctx.stroke();
     ctx.beginPath();
-    ctx.arc(width/2, 160, 30, 0, 2*Math.PI); ctx.stroke();
+    ctx.arc(canvas.width / 2, 160, 30, 0, 2 * Math.PI); ctx.stroke();
     ctx.beginPath();
-    ctx.arc(width/2, height-160, 30, 0, 2*Math.PI); ctx.stroke();
+    ctx.arc(canvas.width / 2, canvas.height - 160, 30, 0, 2 * Math.PI); ctx.stroke();
     ctx.strokeStyle = "#0f0";
     ctx.lineWidth = 7;
     ctx.beginPath();
-    ctx.arc(width/2, -25, 100, Math.PI*0.12, Math.PI*0.88); ctx.stroke();
+    ctx.arc(canvas.width / 2, -25, 100, Math.PI * 0.12, Math.PI * 0.88); ctx.stroke();
     ctx.beginPath();
-    ctx.arc(width/2, height+25, 100, Math.PI*1.12, Math.PI*1.88); ctx.stroke();
+    ctx.arc(canvas.width / 2, canvas.height + 25, 100, Math.PI * 1.12, Math.PI * 1.88); ctx.stroke();
     ctx.lineWidth = 3;
   }
 
   function drawScore() {
-    ctx.font = `${Math.min(32, width/10)}px sans-serif`;
+    ctx.font = '32px sans-serif';
     ctx.fillStyle = '#fff';
-    ctx.fillText(playerScore, width-64, height-28);
-    ctx.fillText(aiScore, width-64, 48);
-    ctx.font = `${Math.min(21, width/20)}px sans-serif`;
+    ctx.fillText(playerScore, canvas.width - 64, canvas.height - 28);
+    ctx.fillText(aiScore, canvas.width - 64, 48);
+    ctx.font = '21px sans-serif';
     ctx.fillText(`Round: ${round} / ${selectedRounds}`, 22, 44);
-    ctx.fillText(`Match: ${roundsWon.player}-${roundsWon.ai}`, 22, height-32);
+    ctx.fillText(`Match: ${roundsWon.player}-${roundsWon.ai}`, 22, canvas.height - 32);
   }
 
   function drawMallet(mallet, color) {
     ctx.beginPath();
-    ctx.arc(mallet.x, mallet.y, malletRadius, 0, 2*Math.PI);
+    ctx.arc(mallet.x, mallet.y, malletRadius, 0, 2 * Math.PI);
     ctx.fillStyle = color;
     ctx.shadowColor = "#000"; ctx.shadowBlur = 12;
     ctx.fill();
@@ -187,7 +160,7 @@
 
   function drawPuck() {
     ctx.beginPath();
-    ctx.arc(puck.x, puck.y, puckRadius, 0, 2*Math.PI);
+    ctx.arc(puck.x, puck.y, puckRadius, 0, 2 * Math.PI);
     ctx.fillStyle = "#fff";
     ctx.shadowColor = "#444"; ctx.shadowBlur = 9;
     ctx.fill();
@@ -195,7 +168,7 @@
   }
 
   function draw() {
-    ctx.clearRect(0,0,width,height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground();
     drawScore();
     drawMallet(aiMallet, "red");
@@ -215,16 +188,16 @@
 
   function update() {
     // AI mallet movement
-    let aiTargetX = Math.max(malletRadius, Math.min(width - malletRadius, puck.x));
+    let aiTargetX = Math.max(malletRadius, Math.min(canvas.width - malletRadius, puck.x));
     let ay = (puck.y - 85) - aiMallet.y;
     let dA = Math.sqrt(Math.pow(aiTargetX - aiMallet.x, 2) + ay * ay);
     if (dA > 1) {
-        let ratio = Math.min(aiSpeed, dA) / dA;
-        aiMallet.x += (aiTargetX - aiMallet.x) * ratio;
-        aiMallet.y += ay * Math.min(ratio, 0.5);
+      let ratio = Math.min(aiSpeed, dA) / dA;
+      aiMallet.x += (aiTargetX - aiMallet.x) * ratio;
+      aiMallet.y += ay * Math.min(ratio, 0.5);
     }
-    aiMallet.x = Math.max(malletRadius, Math.min(width - malletRadius, aiMallet.x));
-    aiMallet.y = Math.max(malletRadius, Math.min(height / 2 - malletRadius, aiMallet.y));
+    aiMallet.x = Math.max(malletRadius, Math.min(canvas.width - malletRadius, aiMallet.x));
+    aiMallet.y = Math.max(malletRadius, Math.min(canvas.height / 2 - malletRadius, aiMallet.y));
 
     // Move puck
     puck.x += puck.vx;
@@ -234,31 +207,31 @@
     if (puck.y <= puckRadius) { // Player scores
       playerScore++;
       showPopup("Pin Point");
-      checkRoundScore();
+      checkRoundScore(); // This will handle the scoring and round progression
       return; // Stop processing this frame, puck will be reset
     }
-    if (puck.y >= height - puckRadius) { // AI scores
+    if (puck.y >= canvas.height - puckRadius) { // AI scores
       aiScore++;
       showPopup("Pin Point");
-      checkRoundScore();
+      checkRoundScore(); // This will handle the scoring and round progression
       return; // Stop processing this frame, puck will be reset
     }
 
     // Wall collision logic
     if (puck.x < puckRadius) {
-        puck.x = puckRadius; // Clamp position
-        puck.vx *= -1;
-    } else if (puck.x > width - puckRadius) {
-        puck.x = width - puckRadius; // Clamp position
-        puck.vx *= -1;
+      puck.x = puckRadius; // Clamp position
+      puck.vx *= -1;
+    } else if (puck.x > canvas.width - puckRadius) {
+      puck.x = canvas.width - puckRadius; // Clamp position
+      puck.vx *= -1;
     }
 
     if (puck.y < puckRadius) {
-        puck.y = puckRadius; // Clamp position
-        puck.vy *= -1;
-    } else if (puck.y > height - puckRadius) {
-        puck.y = height - puckRadius; // Clamp position
-        puck.vy *= -1;
+      puck.y = puckRadius; // Clamp position
+      puck.vy *= -1;
+    } else if (puck.y > canvas.height - puckRadius) {
+      puck.y = canvas.height - puckRadius; // Clamp position
+      puck.vy *= -1;
     }
 
     // Mallet collision logic
@@ -275,11 +248,11 @@
     let speed = Math.sqrt(puck.vx * puck.vx + puck.vy * puck.vy);
 
     if (speed < minSpeed && speed > 0.1) {
-        puck.vx = (puck.vx / speed) * minSpeed;
-        puck.vy = (puck.vy / speed) * minSpeed;
+      puck.vx = (puck.vx / speed) * minSpeed;
+      puck.vy = (puck.vy / speed) * minSpeed;
     } else if (speed > maxSpeed) {
-        puck.vx = (puck.vx / speed) * maxSpeed;
-        puck.vy = (puck.vy / speed) * maxSpeed;
+      puck.vx = (puck.vx / speed) * maxSpeed;
+      puck.vy = (puck.vy / speed) * maxSpeed;
     }
   }
 
@@ -290,17 +263,17 @@
     let minDistance = puckRadius + malletRadius;
 
     if (distance < minDistance) {
-        // Resolve overlap
-        let overlap = minDistance - distance;
-        let nx = dx / distance;
-        let ny = dy / distance;
-        puck.x += nx * overlap;
-        puck.y += ny * overlap;
+      // Resolve overlap
+      let overlap = minDistance - distance;
+      let nx = dx / distance;
+      let ny = dy / distance;
+      puck.x += nx * overlap;
+      puck.y += ny * overlap;
 
-        // Calculate bounce
-        let dotProduct = puck.vx * nx + puck.vy * ny;
-        puck.vx -= 2 * dotProduct * nx;
-        puck.vy -= 2 * dotProduct * ny;
+      // Calculate bounce
+      let dotProduct = puck.vx * nx + puck.vy * ny;
+      puck.vx -= 2 * dotProduct * nx;
+      puck.vy -= 2 * dotProduct * ny;
     }
   }
 
@@ -361,8 +334,8 @@
     if (!isDragging) return;
     e.preventDefault();
     let rect = canvas.getBoundingClientRect();
-    let ex = (e.clientX - rect.left) * width / rect.width;
-    let ey = (e.clientY - rect.top) * height / rect.height;
+    let ex = (e.clientX - rect.left) * canvas.width / rect.width;
+    let ey = (e.clientY - rect.top) * canvas.height / rect.height;
     handleMalletPosition(ex, ey);
   }
 
@@ -371,23 +344,23 @@
     e.preventDefault();
     let touch = e.touches[0];
     let rect = canvas.getBoundingClientRect();
-    let ex = (touch.clientX - rect.left) * width / rect.width;
-    let ey = (touch.clientY - rect.top) * height / rect.height;
+    let ex = (touch.clientX - rect.left) * canvas.width / rect.width;
+    let ey = (touch.clientY - rect.top) * canvas.height / rect.height;
     handleMalletPosition(ex, ey);
   }
 
   function handleMalletPosition(x, y) {
-    playerMallet.x = Math.max(malletRadius, Math.min(width-malletRadius, x));
-    playerMallet.y = Math.max(height/2+malletRadius, Math.min(height-malletRadius, y));
+    playerMallet.x = Math.max(malletRadius, Math.min(canvas.width - malletRadius, x));
+    playerMallet.y = Math.max(canvas.height / 2 + malletRadius, Math.min(canvas.height - malletRadius, y));
   }
 
   // -------------- UI Events --------------
   canvas.addEventListener("mousedown", (e) => {
     if (gameState !== "playing") return;
     let rect = canvas.getBoundingClientRect();
-    let ex = (e.clientX - rect.left) * width / rect.width;
-    let ey = (e.clientY - rect.top) * height / rect.height;
-    let dist = Math.sqrt(Math.pow(playerMallet.x-ex,2) + Math.pow(playerMallet.y-ey,2));
+    let ex = (e.clientX - rect.left) * canvas.width / rect.width;
+    let ey = (e.clientY - rect.top) * canvas.height / rect.height;
+    let dist = Math.sqrt(Math.pow(playerMallet.x - ex, 2) + Math.pow(playerMallet.y - ey, 2));
     if (dist < malletRadius) {
       isDragging = true;
       lockMalletToCursor();
@@ -399,9 +372,9 @@
     e.preventDefault();
     let touch = e.touches[0];
     let rect = canvas.getBoundingClientRect();
-    let ex = (touch.clientX - rect.left) * width / rect.width;
-    let ey = (touch.clientY - rect.top) * height / rect.height;
-    let dist = Math.sqrt(Math.pow(playerMallet.x-ex,2) + Math.pow(playerMallet.y-ey,2));
+    let ex = (touch.clientX - rect.left) * canvas.width / rect.width;
+    let ey = (touch.clientY - rect.top) * canvas.height / rect.height;
+    let dist = Math.sqrt(Math.pow(playerMallet.x - ex, 2) + Math.pow(playerMallet.y - ey, 2));
     if (dist < malletRadius) {
       isDragging = true;
       lockMalletToCursor();
@@ -439,6 +412,24 @@
     else
       winnerText.textContent = "It's a Draw!";
   }
+
+  // Adjust canvas size to fit 9:16 ratio
+  function adjustCanvasSize() {
+    let windowWidth = window.innerWidth;
+    let windowHeight = window.innerHeight;
+    let targetWidth = windowHeight * (9 / 16);
+    if (targetWidth < windowWidth) {
+      canvas.width = targetWidth;
+      canvas.height = windowHeight;
+    } else {
+      canvas.width = windowWidth;
+      canvas.height = windowWidth * (16 / 9);
+    }
+    ctx.scale(canvas.width / targetWidth, canvas.height / windowHeight);
+  }
+
+  window.addEventListener("resize", adjustCanvasSize);
+  adjustCanvasSize();
 
   // Start with menu
   newGame();
